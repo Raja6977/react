@@ -1,6 +1,7 @@
 const express = require("express");
 const bodyParser = require("body-parser");
 const cors = require("cors");
+const path = require('path')
 
 const app = express();
 
@@ -20,7 +21,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.get("/", (req, res) => {
   res.json({ message: "Welcome to Bearcat studdy buddy application." });
 });
-require("../app/routes/bearcat.routes")(app);
+require("./routes/bearcat.routes")(app);
 
 // set port, listen for requests
 const PORT = process.env.PORT || 8080;
@@ -28,9 +29,17 @@ app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}.`);
 });
 
-const db = require("../app/models");
+const db = require("./models");
+
+if(process.env.NODE_ENV === 'production'){
+   app.use(express.static('client/build'));
+
+   app.get('*', (req, res) =>{
+     res.sendFile(path.join(__dirname, 'client', 'build', 'index.html'));
+   })
+}
 db.mongoose
-  .connect(db.url, {
+  .connect(process.env.MONGODB_URI   || db.url, {
     useNewUrlParser: true,
     useUnifiedTopology: true
   })
